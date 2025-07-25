@@ -1,0 +1,644 @@
+{% extends "base.html" %}
+
+{% block title %}Config Editor - GMod TTT Server Panel{% endblock %}
+
+{% block content %}
+<div class="config-editor">
+    <div class="config-header">
+        <h2>⚙️ Server Configuration Editor</h2>
+        <p>Hier kannst du die server.cfg Datei bearbeiten. Änderungen werden sofort gespeichert.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>📝 server.cfg</h3>
+            <div class="config-actions">
+                <button class="btn btn-sm btn-secondary" onclick="reloadConfig()">
+                    🔄 Neu laden
+                </button>
+                <button class="btn btn-sm btn-success" onclick="saveConfig()" id="save-btn">
+                    💾 Speichern
+                </button>
+                <button class="btn btn-sm btn-warning" onclick="validateConfig()">
+                    ✅ Validieren
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="editor-container">
+                <div class="editor-toolbar">
+                    <div class="editor-info">
+                        <span id="line-count">Zeilen: 0</span>
+                        <span id="char-count">Zeichen: 0</span>
+                        <span id="save-status" class="save-status"></span>
+                    </div>
+                    <div class="editor-tools">
+                        <button class="btn-tool" onclick="insertTemplate('basic')" title="Basic Config einfügen">
+                            📋 Basic
+                        </button>
+                        <button class="btn-tool" onclick="insertTemplate('ttt')" title="TTT Config einfügen">
+                            🎮 TTT
+                        </button>
+                        <button class="btn-tool" onclick="formatConfig()" title="Config formatieren">
+                            🎨 Format
+                        </button>
+                    </div>
+                </div>
+                <textarea 
+                    id="config-editor" 
+                    class="config-textarea"
+                    placeholder="Lade Konfiguration..."
+                    spellcheck="false"
+                >{{ config_content }}</textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="config-help">
+        <div class="card">
+            <div class="card-header">
+                <h3>📚 Häufige Konfigurationen</h3>
+            </div>
+            <div class="card-body">
+                <div class="help-grid">
+                    <div class="help-section">
+                        <h4>🌐 Server Grundeinstellungen</h4>
+                        <div class="help-items">
+                            <div class="help-item">
+                                <code>hostname "Mein TTT Server"</code>
+                                <span>Server Name</span>
+                            </div>
+                            <div class="help-item">
+                                <code>sv_password "passwort"</code>
+                                <span>Server Passwort</span>
+                            </div>
+                            <div class="help-item">
+                                <code>maxplayers 32</code>
+                                <span>Max. Spieler</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h4>🎮 TTT Einstellungen</h4>
+                        <div class="help-items">
+                            <div class="help-item">
+                                <code>ttt_round_limit 6</code>
+                                <span>Runden pro Map</span>
+                            </div>
+                            <div class="help-item">
+                                <code>ttt_time_limit_minutes 75</code>
+                                <span>Zeit pro Runde</span>
+                            </div>
+                            <div class="help-item">
+                                <code>ttt_traitor_pct 0.25</code>
+                                <span>Verräter Prozentsatz</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h4>🔧 Performance</h4>
+                        <div class="help-items">
+                            <div class="help-item">
+                                <code>sv_allowupload 1</code>
+                                <span>Upload erlauben</span>
+                            </div>
+                            <div class="help-item">
+                                <code>sv_allowdownload 1</code>
+                                <span>Download erlauben</span>
+                            </div>
+                            <div class="help-item">
+                                <code>net_maxfilesize 64</code>
+                                <span>Max. Dateigröße (MB)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h4>🛡️ Admin & Sicherheit</h4>
+                        <div class="help-items">
+                            <div class="help-item">
+                                <code>rcon_password "adminpass"</code>
+                                <span>RCON Passwort</span>
+                            </div>
+                            <div class="help-item">
+                                <code>sv_lan 0</code>
+                                <span>Internet Server</span>
+                            </div>
+                            <div class="help-item">
+                                <code>sv_region 3</code>
+                                <span>Region (3=Europa)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Validation Modal -->
+<div class="modal" id="validation-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>✅ Konfiguration Validierung</h3>
+            <button class="modal-close" onclick="closeModal('validation-modal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div id="validation-results"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+.config-editor {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.config-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.config-header h2 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.config-header p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+.config-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.editor-container {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.editor-toolbar {
+    background: var(--header-bg);
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.editor-info {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.save-status {
+    font-weight: 600;
+}
+
+.save-status.saved {
+    color: var(--success-color);
+}
+
+.save-status.unsaved {
+    color: var(--warning-color);
+}
+
+.save-status.error {
+    color: var(--danger-color);
+}
+
+.editor-tools {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-tool {
+    background: var(--button-secondary-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-tool:hover {
+    background: var(--button-secondary-hover);
+    border-color: var(--primary-color);
+}
+
+.config-textarea {
+    width: 100%;
+    min-height: 500px;
+    max-height: 70vh;
+    padding: 1rem;
+    border: none;
+    background: #1e1e1e;
+    color: #e0e0e0;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow-x: auto;
+}
+
+.config-textarea:focus {
+    background: #1a1a1a;
+}
+
+.config-help {
+    margin-top: 2rem;
+}
+
+.help-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.help-section h4 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+.help-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.help-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.help-item:hover {
+    border-color: var(--primary-color);
+    background: var(--info-bg);
+}
+
+.help-item code {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: var(--primary-color);
+}
+
+.help-item span {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.validation-results {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.validation-item {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    border-left: 4px solid;
+}
+
+.validation-item.error {
+    background: var(--danger-bg);
+    border-left-color: var(--danger-color);
+}
+
+.validation-item.warning {
+    background: var(--warning-bg);
+    border-left-color: var(--warning-color);
+}
+
+.validation-item.success {
+    background: var(--success-bg);
+    border-left-color: var(--success-color);
+}
+
+@media (max-width: 768px) {
+    .config-actions {
+        flex-wrap: wrap;
+    }
+    
+    .editor-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .editor-info {
+        justify-content: center;
+    }
+    
+    .editor-tools {
+        justify-content: center;
+    }
+    
+    .help-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+let configChanged = false;
+let originalConfig = '';
+
+document.addEventListener('DOMContentLoaded', function() {
+    const editor = document.getElementById('config-editor');
+    originalConfig = editor.value;
+    
+    // Update counters initially
+    updateCounters();
+    
+    // Add event listeners
+    editor.addEventListener('input', function() {
+        configChanged = editor.value !== originalConfig;
+        updateCounters();
+        updateSaveStatus();
+    });
+    
+    // Auto-save every 30 seconds if changed
+    setInterval(function() {
+        if (configChanged) {
+            saveConfig(true); // Silent save
+        }
+    }, 30000);
+    
+    // Warn before leaving if unsaved changes
+    window.addEventListener('beforeunload', function(e) {
+        if (configChanged) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+});
+
+function updateCounters() {
+    const editor = document.getElementById('config-editor');
+    const lines = editor.value.split('\n').length;
+    const chars = editor.value.length;
+    
+    document.getElementById('line-count').textContent = `Zeilen: ${lines}`;
+    document.getElementById('char-count').textContent = `Zeichen: ${chars}`;
+}
+
+function updateSaveStatus() {
+    const status = document.getElementById('save-status');
+    if (configChanged) {
+        status.textContent = '● Ungespeichert';
+        status.className = 'save-status unsaved';
+    } else {
+        status.textContent = '✓ Gespeichert';
+        status.className = 'save-status saved';
+    }
+}
+
+async function saveConfig(silent = false) {
+    const editor = document.getElementById('config-editor');
+    const saveBtn = document.getElementById('save-btn');
+    
+    if (!silent) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '💾 Speichere...';
+    }
+    
+    try {
+        const response = await fetch('/api/config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                config: editor.value
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            configChanged = false;
+            originalConfig = editor.value;
+            updateSaveStatus();
+            
+            if (!silent) {
+                showNotification('Konfiguration erfolgreich gespeichert!', 'success');
+            }
+        } else {
+            if (!silent) {
+                showNotification('Fehler beim Speichern: ' + data.message, 'error');
+            }
+            updateSaveStatusError();
+        }
+        
+    } catch (error) {
+        console.error('Error saving config:', error);
+        if (!silent) {
+            showNotification('Netzwerkfehler beim Speichern', 'error');
+        }
+        updateSaveStatusError();
+    } finally {
+        if (!silent) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '💾 Speichern';
+        }
+    }
+}
+
+function updateSaveStatusError() {
+    const status = document.getElementById('save-status');
+    status.textContent = '✗ Fehler';
+    status.className = 'save-status error';
+}
+
+async function reloadConfig() {
+    if (configChanged && !confirm('Ungespeicherte Änderungen gehen verloren. Trotzdem neu laden?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/config');
+        const data = await response.json();
+        
+        const editor = document.getElementById('config-editor');
+        editor.value = data.config;
+        originalConfig = data.config;
+        configChanged = false;
+        
+        updateCounters();
+        updateSaveStatus();
+        showNotification('Konfiguration neu geladen', 'success');
+        
+    } catch (error) {
+        console.error('Error reloading config:', error);
+        showNotification('Fehler beim Neu laden', 'error');
+    }
+}
+
+function validateConfig() {
+    const editor = document.getElementById('config-editor');
+    const config = editor.value;
+    const results = [];
+    
+    // Basic validation rules
+    const lines = config.split('\n');
+    let lineNumber = 0;
+    
+    for (let line of lines) {
+        lineNumber++;
+        line = line.trim();
+        
+        if (line === '' || line.startsWith('//')) continue;
+        
+        // Check for common issues
+        if (line.includes('sv_password') && line.includes('""')) {
+            results.push({
+                type: 'warning',
+                line: lineNumber,
+                message: 'Leeres Server-Passwort - Server ist öffentlich zugänglich'
+            });
+        }
+        
+        if (line.includes('rcon_password') && line.includes('""')) {
+            results.push({
+                type: 'error',
+                line: lineNumber,
+                message: 'Leeres RCON-Passwort - Sicherheitsrisiko!'
+            });
+        }
+        
+        if (line.includes('maxplayers') && parseInt(line.split(' ')[1]) > 128) {
+            results.push({
+                type: 'warning',
+                line: lineNumber,
+                message: 'Sehr hohe Spieleranzahl - kann Performance-Probleme verursachen'
+            });
+        }
+        
+        // Check syntax
+        if (!line.includes(' ') && !line.includes('exec')) {
+            results.push({
+                type: 'error',
+                line: lineNumber,
+                message: 'Ungültige Syntax - Befehle benötigen Parameter'
+            });
+        }
+    }
+    
+    // Show results
+    showValidationResults(results);
+}
+
+function showValidationResults(results) {
+    const modal = document.getElementById('validation-modal');
+    const resultsContainer = document.getElementById('validation-results');
+    
+    if (results.length === 0) {
+        resultsContainer.innerHTML = '<div class="validation-item success">✅ Keine Probleme gefunden! Konfiguration sieht gut aus.</div>';
+    } else {
+        let html = '';
+        for (let result of results) {
+            html += `<div class="validation-item ${result.type}">
+                <strong>Zeile ${result.line}:</strong> ${result.message}
+            </div>`;
+        }
+        resultsContainer.innerHTML = html;
+    }
+    
+    modal.style.display = 'flex';
+}
+
+function insertTemplate(type) {
+    const editor = document.getElementById('config-editor');
+    let template = '';
+    
+    if (type === 'basic') {
+        template = `
+// === Grundlegende Server-Einstellungen ===
+hostname "Mein TTT Server"
+sv_password ""
+maxplayers 32
+sv_region 3
+sv_lan 0
+
+// === RCON Einstellungen ===
+rcon_password "your_rcon_password_here"
+
+// === Netzwerk Einstellungen ===
+sv_allowupload 1
+sv_allowdownload 1
+net_maxfilesize 64
+`;
+    } else if (type === 'ttt') {
+        template = `
+// === TTT Gamemode Einstellungen ===
+ttt_round_limit 6
+ttt_time_limit_minutes 10
+ttt_haste_starting_minutes 5
+ttt_haste_minutes_per_death 0.5
+ttt_traitor_pct 0.25
+ttt_detective_pct 0.13
+
+// === TTT Ausrüstung ===
+ttt_credits_starting 2
+ttt_credits_award_pct 0.35
+ttt_credits_award_size 1
+ttt_credits_award_repeat 1
+
+// === TTT Gameplay ===
+ttt_detective_max 32
+ttt_detective_min_players 8
+ttt_sherlock_mode 0
+ttt_no_nade_throw_during_prep 1
+`;
+    }
+    
+    // Insert at cursor position
+    const cursorPos = editor.selectionStart;
+    const textBefore = editor.value.substring(0, cursorPos);
+    const textAfter = editor.value.substring(editor.selectionEnd);
+    
+    editor.value = textBefore + template + textAfter;
+    editor.focus();
+    editor.setSelectionRange(cursorPos + template.length, cursorPos + template.length);
+    
+    configChanged = true;
+    updateCounters();
+    updateSaveStatus();
+}
+
+function formatConfig() {
+    const editor = document.getElementById('config-editor');
+    const lines = editor.value.split('\n');
+    const formatted = [];
+    
+    for (let line of lines) {
+        const trimmed = line.trim();
+        if (trimmed === '') {
+            formatted.push('');
+        } else if (
