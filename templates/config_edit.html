@@ -641,4 +641,128 @@ function formatConfig() {
         const trimmed = line.trim();
         if (trimmed === '') {
             formatted.push('');
-        } else if (
+        } else if (trimmed.startsWith('//')) {
+            formatted.push(trimmed);
+        } else {
+            // Format command lines
+            const parts = trimmed.split(' ');
+            if (parts.length >= 2) {
+                const command = parts[0];
+                const value = parts.slice(1).join(' ');
+                formatted.push(`${command} ${value}`);
+            } else {
+                formatted.push(trimmed);
+            }
+        }
+    }
+    
+    editor.value = formatted.join('\n');
+    configChanged = true;
+    updateCounters();
+    updateSaveStatus();
+    showNotification('Konfiguration formatiert', 'success');
+}
+
+function showNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    // Add styles
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: var(--${type === 'error' ? 'danger' : type === 'warning' ? 'warning' : 'success'}-bg);
+        color: var(--${type === 'error' ? 'danger' : type === 'warning' ? 'warning' : 'success'}-color);
+        padding: 1rem;
+        border-radius: 6px;
+        border: 1px solid var(--${type === 'error' ? 'danger' : type === 'warning' ? 'warning' : 'success'}-color);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 1002;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        max-width: 400px;
+        animation: slideInRight 0.3s ease;
+    `;
+    
+    notification.querySelector('button').style.cssText = `
+        background: none;
+        border: none;
+        color: inherit;
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 0;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+// Add click handlers for help items
+document.addEventListener('DOMContentLoaded', function() {
+    const helpItems = document.querySelectorAll('.help-item');
+    helpItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const code = this.querySelector('code').textContent;
+            const editor = document.getElementById('config-editor');
+            
+            // Insert at cursor or end
+            const cursorPos = editor.selectionStart || editor.value.length;
+            const textBefore = editor.value.substring(0, cursorPos);
+            const textAfter = editor.value.substring(cursorPos);
+            
+            editor.value = textBefore + code + '\n' + textAfter;
+            editor.focus();
+            editor.setSelectionRange(cursorPos + code.length + 1, cursorPos + code.length + 1);
+            
+            configChanged = true;
+            updateCounters();
+            updateSaveStatus();
+            
+            // Visual feedback
+            this.style.background = 'var(--success-bg)';
+            setTimeout(() => {
+                this.style.background = '';
+            }, 200);
+        });
+    });
+});
+
+// Add CSS animation
+const style = document.createElement('style');
+style.textContent = `
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}
