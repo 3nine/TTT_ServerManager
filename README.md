@@ -1,437 +1,244 @@
-# GMod TTT Server Panel
+# TTT Server Control Panel
 
-Ein webbasiertes Admin-Panel für Garry's Mod TTT (Trouble in Terrorist Town) Server auf Linux-Root-Servern.
+Ein vollständiges Control Panel zur Verwaltung mehrerer Garry's Mod TTT-Server mit React Frontend und Python Flask Backend.
 
-![Panel Screenshot](https://via.placeholder.com/800x400?text=GMod+TTT+Server+Panel)
+## Features
 
-## ✨ Features
+- **Dashboard**: Übersicht aller Server mit Status, Spielerzahl und aktueller Map
+- **Server-Management**: Hinzufügen, Löschen und Konfigurieren von Servern
+- **RCON-Steuerung**: Direkte Befehlseingabe über RCON-Konsole
+- **Server-Aktionen**: Start, Stop, Restart von Servern
+- **Authentifizierung**: Login-System für Administratoren
+- **Echzeit-Updates**: Automatische Status-Aktualisierung alle 30 Sekunden
+- **Responsive Design**: Optimiert für Desktop und Mobile
 
-- 🎮 **Server-Steuerung**: Starten, Stoppen, Neustarten über Webinterface
-- 📊 **Echtzeit-Status**: Live-Anzeige von Server-Status, Uptime und Port-Status
-- ⚙️ **Config-Editor**: Web-basierter Editor für `server.cfg` mit Syntax-Highlighting
-- 📋 **Log-Viewer**: Echtzeit-Anzeige der Server-Logs mit verschiedenen Ansichten
-- 🔐 **Sicheres Login**: Session-basierte Authentifizierung mit konfigurierbaren Benutzern
-- 📱 **Responsive Design**: Optimiert für Desktop, Tablet und Mobile
-- 🌙 **Dark/Light Mode**: Automatische Theme-Erkennung
-- 🔄 **Auto-Refresh**: Automatische Aktualisierung des Server-Status
-- 💾 **Backup-System**: Automatische Server-Backups mit Rotation
-- 🔔 **Benachrichtigungen**: Toast-Notifications für alle Aktionen
-
-## 🛠️ Technische Details
+## Technologie-Stack
 
 ### Backend
-- **Flask** (Python 3.8+) - Web Framework
-- **Flask-Login** - Session Management
-- **Subprocess** - Server-Kommunikation über Shell-Kommandos
-- **JSON** - Benutzer- und Konfigurationsdaten
+- **Python Flask**: Web-Framework
+- **SQLite**: Datenbank für Server- und Benutzerdaten
+- **RCON-Client**: Eigene Implementierung für Garry's Mod Server
+- **Threading**: Hintergrund-Monitoring der Server
 
 ### Frontend
-- **HTML5** - Semantisches Markup
-- **CSS3** - Moderne Styles mit CSS Variables
-- **Vanilla JavaScript** - Keine externen Abhängigkeiten
-- **Responsive Design** - CSS Grid & Flexbox
+- **React**: UI-Framework
+- **Moderne CSS**: Responsive Design mit Flexbox/Grid
+- **Fetch API**: HTTP-Kommunikation mit Backend
 
-### Systemintegration
-- **Systemd** - Service Management
-- **Nginx** - Reverse Proxy
-- **Supervisor** - Prozess-Management
-- **Logrotate** - Log-Rotation
-- **UFW/Firewalld** - Firewall-Konfiguration
+## Installation & Einrichtung
 
-## 📋 Voraussetzungen
+### Voraussetzungen
+- Python 3.8+
+- Node.js 16+
+- NPM oder Yarn
 
-### System
-- Linux-Server (Ubuntu 18.04+, Debian 10+, CentOS 7+)
-- Root-Zugriff für Installation
-- Mindestens 2GB RAM, 10GB freier Speicher
-- Python 3.8 oder höher
+### Backend Setup
 
-### Software
-- Garry's Mod Dedicated Server
-- Systemd (für Service-Management)
-- Nginx (als Reverse Proxy)
-- Supervisor (für Prozess-Management)
-
-## 🚀 Schnelle Installation
-
-### 1. Repository klonen
+1. **Repository klonen und Backend-Ordner erstellen:**
 ```bash
-git clone https://github.com/dein-username/gmod-ttt-panel.git
-cd gmod-ttt-panel
+mkdir ttt-control-panel
+cd ttt-control-panel
+mkdir backend
+cd backend
 ```
 
-### 2. Installation ausführen
+2. **Virtuelle Umgebung erstellen:**
 ```bash
-sudo chmod +x setup.sh
-sudo ./setup.sh
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# oder
+venv\Scripts\activate     # Windows
 ```
 
-Das Setup-Script führt automatisch folgende Schritte aus:
-- Installation aller Systemabhängigkeiten
-- Erstellung des Benutzers `gmod`
-- Python Virtual Environment Setup
-- Nginx-Konfiguration
-- Supervisor-Konfiguration
-- Firewall-Setup
-- SSL-Setup (optional)
-
-### 3. GMod Server installieren
+3. **Dependencies installieren:**
 ```bash
-# Als gmod-Benutzer
-sudo -u gmod -s
-cd /home/gmod/server
-
-# SteamCMD installieren
-wget https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz
-tar -xvzf steamcmd_linux.tar.gz
-
-# GMod Server herunterladen
-./steamcmd.sh +login anonymous +force_install_dir /home/gmod/server +app_update 4020 +quit
-```
-
-### 4. Konfiguration anpassen
-```bash
-# Panel-Konfiguration
-sudo -u gmod nano /home/gmod/panel/config.py
-
-# Server-Konfiguration
-sudo -u gmod nano /home/gmod/server/garrysmod/cfg/server.cfg
-```
-
-### 5. Services starten
-```bash
-# GMod Server starten
-sudo systemctl start gmod-ttt
-sudo systemctl enable gmod-ttt
-
-# Panel-Status prüfen
-sudo supervisorctl status gmod-panel
-```
-
-## 🔧 Manuelle Installation
-
-Falls das automatische Setup nicht funktioniert:
-
-### 1. System-Abhängigkeiten
-```bash
-# Ubuntu/Debian
-sudo apt update
-sudo apt install python3 python3-pip python3-venv nginx supervisor git
-
-# CentOS/RHEL
-sudo yum update
-sudo yum install python3 python3-pip nginx supervisor git
-```
-
-### 2. Benutzer erstellen
-```bash
-sudo useradd -m -s /bin/bash gmod
-sudo mkdir -p /home/gmod/{server,panel,backups}
-sudo chown -R gmod:gmod /home/gmod
-```
-
-### 3. Panel installieren
-```bash
-sudo -u gmod -s
-cd /home/gmod/panel
-git clone https://github.com/dein-username/gmod-ttt-panel.git .
-
-# Virtual Environment
-python3 -m venv venv
-source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Nginx konfigurieren
+4. **Backend starten:**
 ```bash
-sudo cp configs/nginx/gmod-panel /etc/nginx/sites-available/
-sudo ln -s /etc/nginx/sites-available/gmod-panel /etc/nginx/sites-enabled/
-sudo rm /etc/nginx/sites-enabled/default
-sudo nginx -t
-sudo systemctl restart nginx
+python app.py
 ```
 
-### 5. Supervisor konfigurieren
+Das Backend läuft standardmäßig auf `http://localhost:5000`
+
+### Frontend Setup
+
+1. **Frontend-Ordner erstellen:**
 ```bash
-sudo cp configs/supervisor/gmod-panel.conf /etc/supervisor/conf.d/
-sudo systemctl restart supervisor
-sudo supervisorctl reread
-sudo supervisorctl update
+cd ..
+mkdir frontend
+cd frontend
 ```
 
-## ⚙️ Konfiguration
+2. **React App initialisieren:**
+```bash
+npx create-react-app .
+```
 
-### Panel-Konfiguration (`config.py`)
+3. **Dependencies sind bereits in package.json definiert:**
+```bash
+npm install
+```
+
+4. **App.js und App.css ersetzen** mit den bereitgestellten Dateien
+
+5. **Frontend starten:**
+```bash
+npm start
+```
+
+Das Frontend läuft standardmäßig auf `http://localhost:3000`
+
+## Konfiguration
+
+### Standard-Login
+- **Benutzername**: `admin`
+- **Passwort**: `admin123`
+
+### Server hinzufügen
+1. Nach dem Login auf "Add Server" klicken
+2. Folgende Informationen eingeben:
+   - **Server Name**: Anzeigename
+   - **IP Address**: Server-IP-Adresse
+   - **Game Port**: Standard 27015
+   - **RCON Port**: Standard 27015 (meist gleich wie Game Port)
+   - **RCON Password**: RCON-Passwort des Servers
+
+### RCON-Konfiguration für GMod Server
+In der `server.cfg` Ihres GMod-Servers:
+```
+rcon_password "IhrRCONPasswort"
+net_maxfilesize 64
+```
+
+## Verwendung
+
+### Dashboard
+- Zeigt alle konfigurierten Server mit aktuellem Status
+- Automatische Aktualisierung alle 30 Sekunden
+- Farbkodierte Status-Anzeige (Grün=Online, Rot=Offline)
+
+### Server-Steuerung
+- **Start**: Server starten (implementierungsabhängig)
+- **Stop**: Server über RCON beenden
+- **Restart**: Server über RCON neu starten
+- **Console**: RCON-Konsole für direkte Befehlseingabe
+
+### Verfügbare RCON-Befehle (Beispiele)
+```
+status              - Server-Status anzeigen
+changelevel ttt_67thway - Map wechseln
+kick "Spielername"  - Spieler kicken
+ban "Spielername"   - Spieler bannen
+say "Nachricht"     - Server-Nachricht senden
+```
+
+## Projektstruktur
+
+```
+ttt-control-panel/
+├── backend/
+│   ├── app.py              # Flask-Anwendung
+│   ├── requirements.txt    # Python-Dependencies
+│   └── servers.db         # SQLite-Datenbank (wird automatisch erstellt)
+└── frontend/
+    ├── src/
+    │   ├── App.js         # React-Hauptkomponente
+    │   └── App.css        # Styling
+    ├── package.json       # Node.js-Dependencies
+    └── public/            # Statische Dateien
+```
+
+## Erweiterte Konfiguration
+
+### Sicherheit
+1. **Geheimen Schlüssel ändern:**
 ```python
-SERVER_CONFIG = {
-    'service_name': 'gmod-ttt',  # Systemd Service Name
-    'server_path': '/home/gmod/server',  # Server-Verzeichnis
-    'config_file': '/home/gmod/server/garrysmod/cfg/server.cfg',
-    'log_file': '/home/gmod/server/console.log',
-    'server_port': 27015,
-    'rcon_password': 'dein_sicheres_passwort'  # ÄNDERN!
+app.secret_key = 'your-secure-secret-key-here'
+```
+
+2. **Admin-Passwort ändern:**
+```python
+# In init_db() Funktion
+admin_hash = generate_password_hash('IhrNeuesPasswort')
+```
+
+### Produktions-Deployment
+1. **Backend für Produktion:**
+```bash
+pip install gunicorn
+gunicorn -w 4 -b 0.0.0.0:5000 app:app
+```
+
+2. **Frontend build:**
+```bash
+npm run build
+```
+
+3. **Nginx-Konfiguration** (Beispiel):
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+    
+    location / {
+        root /path/to/frontend/build;
+        try_files $uri $uri/ /index.html;
+    }
+    
+    location /api {
+        proxy_pass http://localhost:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
 }
 ```
 
-### Benutzer verwalten
-```bash
-# Als gmod-Benutzer
-cd /home/gmod/panel
-source venv/bin/activate
-python3 manage_users.py add-user username password
-python3 manage_users.py change-password username new_password
-python3 manage_users.py list-users
-```
-
-### Server-Konfiguration (`server.cfg`)
-```bash
-# Standard TTT-Konfiguration
-hostname "Mein TTT Server"
-sv_password ""
-maxplayers 32
-sv_region 3
-
-# TTT-spezifische Einstellungen
-ttt_round_limit 6
-ttt_time_limit_minutes 10
-ttt_traitor_pct 0.25
-```
-
-## 🔐 Sicherheit
-
-### Standard-Sicherheitsmaßnahmen
-- Session-basierte Authentifizierung
-- CSRF-Schutz
-- Input-Sanitization
-- Sichere HTTP-Headers
-- Benutzerrechte-Trennung
-
-### Empfohlene Sicherheitsschritte
-1. **Passwörter ändern**: Standard-Login (`admin:admin123`) sofort ändern
-2. **RCON-Passwort**: Starkes RCON-Passwort in `config.py` setzen
-3. **SSL aktivieren**: HTTPS mit Let's Encrypt einrichten
-4. **Firewall**: Nur notwendige Ports öffnen
-5. **Updates**: System und Panel regelmäßig aktualisieren
-
-### SSL/HTTPS einrichten
-```bash
-# Certbot installieren
-sudo apt install certbot python3-certbot-nginx
-
-# Zertifikat erhalten
-sudo certbot --nginx -d deine-domain.com
-
-# Auto-Renewal testen
-sudo certbot renew --dry-run
-```
-
-## 📊 Monitoring & Logs
-
-### Log-Dateien
-- **Panel**: `/var/log/gmod-panel.log`
-- **GMod Server**: `/home/gmod/server/console.log`
-- **Nginx**: `/var/log/nginx/access.log`, `/var/log/nginx/error.log`
-
-### Service-Status prüfen
-```bash
-# Panel-Status
-sudo supervisorctl status gmod-panel
-
-# GMod Server-Status
-sudo systemctl status gmod-ttt
-
-# Nginx-Status
-sudo systemctl status nginx
-```
-
-### Performance-Monitoring
-```bash
-# Server-Ressourcen
-htop
-free -h
-df -h
-
-# Netzwerk-Verbindungen
-sudo netstat -tulpn | grep :27015
-sudo netstat -tulpn | grep :80
-```
-
-## 🔄 Backup & Wartung
-
-### Automatische Backups
-Das Panel erstellt automatisch tägliche Backups:
-- **Zeit**: 03:00 Uhr
-- **Location**: `/home/gmod/backups/`
-- **Retention**: 10 Backups
-- **Format**: `gmod_backup_YYYYMMDD_HHMMSS.tar.gz`
-
-### Manuelles Backup
-```bash
-# Backup erstellen
-sudo -u gmod /home/gmod/backup.sh
-
-# Backup wiederherstellen
-sudo systemctl stop gmod-ttt
-sudo -u gmod tar -xzf /home/gmod/backups/gmod_backup_20231215_030000.tar.gz -C /home/gmod/server/
-sudo systemctl start gmod-ttt
-```
-
-### Updates
-```bash
-# Panel aktualisieren
-cd /home/gmod/panel
-git pull origin main
-source venv/bin/activate
-pip install -r requirements.txt
-sudo supervisorctl restart gmod-panel
-
-# GMod Server aktualisieren
-sudo systemctl stop gmod-ttt
-sudo -u gmod /home/gmod/server/steamcmd.sh +login anonymous +force_install_dir /home/gmod/server +app_update 4020 +quit
-sudo systemctl start gmod-ttt
-```
-
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Häufige Probleme
 
-#### Panel startet nicht
+1. **RCON-Verbindung fehlgeschlagen:**
+   - RCON-Port und Passwort prüfen
+   - Firewall-Einstellungen kontrollieren
+   - Server-Konfiguration überprüfen
+
+2. **Server wird als offline angezeigt:**
+   - IP und Port korrekt eingegeben?
+   - Server tatsächlich gestartet?
+   - Netzwerk-Verbindung prüfen
+
+3. **Frontend kann nicht mit Backend kommunizieren:**
+   - CORS-Einstellungen prüfen
+   - Backend läuft auf Port 5000?
+   - API-URL im Frontend korrekt?
+
+### Debug-Modus
+Backend im Debug-Modus starten:
 ```bash
-# Logs prüfen
-sudo supervisorctl tail gmod-panel
-
-# Manuell testen
-cd /home/gmod/panel
-source venv/bin/activate
-python3 app.py
+export FLASK_DEBUG=1  # Linux/Mac
+set FLASK_DEBUG=1     # Windows
+python app.py
 ```
 
-#### GMod Server startet nicht
-```bash
-# Service-Status prüfen
-sudo systemctl status gmod-ttt
+## Erweiterungsmöglichkeiten
 
-# Logs prüfen
-sudo journalctl -u gmod-ttt -f
+- **Logging**: Detaillierte Server-Logs
+- **Statistiken**: Spieler-Statistiken und Diagramme
+- **Automatisierung**: Geplante Server-Aktionen
+- **Multi-User**: Mehrere Admin-Accounts
+- **Plugin-Management**: Server-Plugins verwalten
+- **Backup-System**: Automatische Server-Backups
 
-# Manuell testen
-sudo -u gmod /home/gmod/server/srcds_run -game garrysmod +gamemode terrortown +map ttt_minecraft_b5
-```
+## Support
 
-#### Nginx-Fehler
-```bash
-# Konfiguration testen
-sudo nginx -t
+Bei Problemen oder Fragen:
+1. Logs im Backend-Terminal prüfen
+2. Browser-Entwicklerkonsole für Frontend-Fehler
+3. RCON-Verbindung manuell testen
+4. Server-Logs des GMod-Servers kontrollieren
 
-# Logs prüfen
-sudo tail -f /var/log/nginx/error.log
+## Lizenz
 
-# Service neu starten
-sudo systemctl restart nginx
-```
-
-#### Permission-Probleme
-```bash
-# Berechtigungen reparieren
-sudo chown -R gmod:gmod /home/gmod
-sudo chmod -R 755 /home/gmod
-```
-
-### Debug-Modus aktivieren
-```bash
-# In config.py
-DEBUG = True
-
-# Service neu starten
-sudo supervisorctl restart gmod-panel
-```
-
-## 📝 API-Dokumentation
-
-### REST-Endpoints
-
-#### Server-Status
-```http
-GET /api/status
-Response: {
-    "service_active": true,
-    "port_open": true,
-    "uptime": "2 days, 5:30:20"
-}
-```
-
-#### Server-Steuerung
-```http
-POST /api/start
-POST /api/stop  
-POST /api/restart
-Response: {
-    "success": true,
-    "message": "Server started successfully"
-}
-```
-
-#### Logs abrufen
-```http
-GET /api/logs?lines=100
-Response: {
-    "logs": "Server log content..."
-}
-```
-
-#### Konfiguration
-```http
-GET /api/config
-Response: {
-    "config": "server.cfg content..."
-}
-
-POST /api/config
-Body: {
-    "config": "Updated server.cfg content..."
-}
-```
-
-## 🤝 Contributing
-
-### Development Setup
-```bash
-git clone https://github.com/dein-username/gmod-ttt-panel.git
-cd gmod-ttt-panel
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python3 app.py
-```
-
-### Code-Style
-- Python: PEP 8
-- JavaScript: ES6+
-- HTML: Semantic HTML5
-- CSS: BEM Methodology
-
-### Pull Requests
-1. Fork das Repository
-2. Erstelle einen Feature-Branch
-3. Committe deine Änderungen
-4. Erstelle einen Pull Request
-
-## 📄 Lizenz
-
-MIT License - siehe [LICENSE](LICENSE) Datei für Details.
-
-## 👥 Support
-
-- **Issues**: [GitHub Issues](https://github.com/dein-username/gmod-ttt-panel/issues)
-- **Diskussionen**: [GitHub Discussions](https://github.com/dein-username/gmod-ttt-panel/discussions)
-- **Wiki**: [GitHub Wiki](https://github.com/dein-username/gmod-ttt-panel/wiki)
-
-## 🙏 Credits
-
-- **Flask** - Web Framework
-- **GMod Community** - Inspiration und Testing
-- **Contributors** - Alle, die zum Projekt beigetragen haben
-
----
-
-**⚠️ Hinweis**: Dieses Panel ist für private Server gedacht. Stelle sicher, dass alle Sicherheitsmaßnahmen implementiert sind, bevor du es in einer Produktionsumgebung einsetzt.
+Dieses Projekt ist für den privaten und kommerziellen Gebrauch frei verfügbar.
